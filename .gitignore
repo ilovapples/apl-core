@@ -1,2 +1,7 @@
+# Build files
 obj/*
 libaplcore.a
+
+# Other files
+.cache/
+compile_commands.json
