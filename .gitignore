@@ -3,5 +3,5 @@ obj/*
 libaplcore.a
 
 # Other files
-.cache/
+.cache
 compile_commands.json
