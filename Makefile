@@ -1,7 +1,7 @@
 INCL := include
 SRC := src
 OBJ := obj
-CFLAGS := -Wall -Wextra -pedantic -Wshadow -Werror -I.. -O3
+CFLAGS := -Wall -Wextra -pedantic -Wshadow -Werror -I.. -O3 -static
 OBJS_LIST := $(OBJ)/array.o $(OBJ)/arena.o $(OBJ)/slice.o $(OBJ)/util-log.o $(OBJ)/util-error.o $(OBJ)/util-misc.o
 
 LIB_NAME := aplcore
@@ -12,7 +12,7 @@ LIB_FILE_NAME := lib$(LIB_NAME).a
 EXT_APL_LIB_DIR := $(EXTERN_INCL_DIR)/$(LIB_NAME)
 EXT_APL_INCL_DIR := $(EXTERN_INCL_DIR)/$(LIB_NAME)
 
-all: $(INCL) $(SRC) $(OBJ) \
+all: Makefile $(INCL) $(SRC) $(OBJ) \
 	build_objects_list \
 	$(LIB_FILE_NAME) $(EXTERN_LIB_DIR)/$(LIB_FILE_NAME) \
 	check
@@ -64,7 +64,7 @@ $(OBJ):
 	mkdir $(OBJ)
 $(EXT_APL_INCL_DIR): $(INCL)
 	rm -rf $(EXT_APL_INCL_DIR)
-	mkdir $(EXT_APL_INCL_DIR)
+	mkdir -p $(EXT_APL_INCL_DIR)
 
 clean:
 	$(info [INFO] Cleaning...)
