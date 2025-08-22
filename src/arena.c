@@ -195,7 +195,7 @@ s32 ArenaBlock_compare(const ArenaBlock *left, const ArenaBlock *right)
 
 void ARENA_sort_blocks_arr(Arena arena)
 {
-	qsort(arena.blocks_arr.ptr, arena.blocks_arr.length, arena.blocks_arr.memb_size, (__compar_fn_t) ArenaBlock_compare);
+	qsort(arena.blocks_arr.ptr, arena.blocks_arr.length, arena.blocks_arr.memb_size, (int (*) (const void *, const void *))ArenaBlock_compare);
 }
 
 Result(Array) ARR_create_empty_in_arena(Arena *arena_p, size_t nmemb, size_t memb_size)

@@ -3,10 +3,10 @@
 
 #include <sys/types.h>
 
-typedef ssize_t (*comp_func) (void *left, void *right);
+typedef ssize_t (*comp_func) (const void *left, const void *right);
 /* Modifies the value of accum, doesn't return the new value.
  * ~~When called with NULL for either argument, returns the size of its return
  * value.~~ Doesn't have to do this*/
-typedef void (*accum_func) (void *accum, void *val);
+typedef void (*accum_func) (void *accum, const void *val);
 
 #endif /* APLCORE__POLYMORPH_H */

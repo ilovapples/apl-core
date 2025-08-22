@@ -1,21 +1,21 @@
 INCL := include
 SRC := src
 OBJ := obj
-CFLAGS := -Wall -Wextra -pedantic -Wshadow -Werror -I.. -O3 -static
 OBJS_LIST := $(OBJ)/array.o $(OBJ)/arena.o $(OBJ)/slice.o $(OBJ)/util-log.o $(OBJ)/util-error.o $(OBJ)/util-misc.o
 
 LIB_NAME := aplcore
-EXTERN_LIB_DIR := ~/Coding/lib
-EXTERN_INCL_DIR := ~/Coding/include
+EXTERN_LIB_DIR := $(HOME)/Coding/lib
+EXTERN_INCL_DIR := $(HOME)/Coding/include
+
+CFLAGS := -Wall -Wextra -pedantic -Wshadow -Werror -I$(EXTERN_INCL_DIR) -O3 -static
 
 LIB_FILE_NAME := lib$(LIB_NAME).a
 EXT_APL_LIB_DIR := $(EXTERN_INCL_DIR)/$(LIB_NAME)
 EXT_APL_INCL_DIR := $(EXTERN_INCL_DIR)/$(LIB_NAME)
 
-all: Makefile $(INCL) $(SRC) $(OBJ) \
+all: Makefile $(INCL) check $(EXTERN_LIB_DIR)/$(LIB_FILE_NAME) $(SRC) $(OBJ) \
 	build_objects_list \
-	$(LIB_FILE_NAME) $(EXTERN_LIB_DIR)/$(LIB_FILE_NAME) \
-	check
+	$(LIB_FILE_NAME)
 
 .PHONY: clean check build_objects_list
 

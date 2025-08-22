@@ -55,7 +55,7 @@ err32_t ARR_resize(Array *arrp, size_t memb_capacity)
 	if (memb_capacity == 0)
 		return ARR_ALLOC_CAPACITY_PARAM_IS_ZERO;
 
-	void *temp_realloc_ptr = reallocarray(arrp->ptr, memb_capacity, arrp->memb_size);
+	void *temp_realloc_ptr = realloc(arrp->ptr, memb_capacity * arrp->memb_size);
 	if (temp_realloc_ptr == NULL)
 		return REALLOC_FAILURE;
 
