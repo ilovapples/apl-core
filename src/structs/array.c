@@ -1,17 +1,17 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "aplcore/types.h"
-#include "aplcore/array.h"
-#include "aplcore/util/error.h"
-#include "aplcore/util/misc.h"
+#include "types.h"
+#include "structs/array.h"
+#include "util/error.h"
+#include "util/misc.h"
 
 Result(Array) ARR_create_empty(size_t nmemb, size_t memb_size)
 {
 	if (nmemb == 0)
-		return RES(ERR_ARR, ARR_ALLOC_NMEMB_PARAM_IS_ZERO, Array);
+		return RES(ERR_ARR, ALLOC_NMEMB_PARAM_IS_ZERO, Array);
 	if (memb_size == 0)
-		return RES(ERR_ARR, ARR_ALLOC_MEMB_SIZE_PARAM_IS_ZERO, Array);
+		return RES(ERR_ARR, ALLOC_MEMB_SIZE_PARAM_IS_ZERO, Array);
 
 	Array ret;
 	ret.ptr = malloc(nmemb * memb_size);
@@ -25,9 +25,9 @@ Result(Array) ARR_create_empty(size_t nmemb, size_t memb_size)
 Result(Array) ARR_create_zeroed(size_t nmemb, size_t memb_size)
 {
 	if (nmemb == 0)
-		return RES(ERR_ARR, ARR_ALLOC_NMEMB_PARAM_IS_ZERO, Array);
+		return RES(ERR_ARR, ALLOC_NMEMB_PARAM_IS_ZERO, Array);
 	if (memb_size == 0)
-		return RES(ERR_ARR, ARR_ALLOC_MEMB_SIZE_PARAM_IS_ZERO, Array);
+		return RES(ERR_ARR, ALLOC_MEMB_SIZE_PARAM_IS_ZERO, Array);
 
 	Array ret;
 	ret.ptr = calloc(nmemb, memb_size);
@@ -51,9 +51,9 @@ Result(Array) ARR_clone(Array from)
 err32_t ARR_resize(Array *arrp, size_t memb_capacity)
 {
 	if (arrp->owner != NULL)
-		return ARR_IS_OWNED_ERR;
+		return GENERIC_IS_OWNED_ERR;
 	if (memb_capacity == 0)
-		return ARR_ALLOC_CAPACITY_PARAM_IS_ZERO;
+		return ALLOC_SIZE_PARAM_IS_ZERO;
 
 	void *temp_realloc_ptr = realloc(arrp->ptr, memb_capacity * arrp->memb_size);
 	if (temp_realloc_ptr == NULL)
@@ -63,15 +63,15 @@ err32_t ARR_resize(Array *arrp, size_t memb_capacity)
 	arrp->capacity_b = memb_capacity * arrp->memb_size;
 	arrp->length = MIN(arrp->length, memb_capacity);
 
-	return 0;
+	return NIL;
 }
 
 err32_t ARR_resize_B(Array *arrp, size_t capacity_b)
 {
 	if (arrp->owner != NULL)
-		return ARR_IS_OWNED_ERR;
+		return GENERIC_IS_OWNED_ERR;
 	if (capacity_b == 0)
-		return ARR_ALLOC_CAPACITY_PARAM_IS_ZERO;
+		return ALLOC_SIZE_PARAM_IS_ZERO;
 
 	void *temp_realloc_ptr = realloc(arrp->ptr, capacity_b); 
 	if (temp_realloc_ptr == NULL)
@@ -130,48 +130,62 @@ err32_t ARR_copy_range_to(Array *arrp, size_t start, const void *in_p, size_t n)
 	return 0;
 }
 
-err32_t ARR_copy_range_to_B(Array *arrp, size_t start_b, const void *in_p, size_t n_b)
+err32_t ARR_copy_range_to_B(Array *arr, size_t start_b, const void *in_p, size_t n_b)
 {
-	if (ARR_is_err(*arrp))
+	if (ARR_is_err(*arr))
 		return ARR_PARAM_IS_ERR;
 	if (in_p == NULL)
 		return PTR_PARAM_IS_NULL;
-	if (start_b > arrp->length * arrp->memb_size)
+	if (start_b > arr->length * arr->memb_size)
 		return START_POS_OUT_OF_BOUNDS;
-	if (start_b + n_b > arrp->capacity_b)
+	if (start_b + n_b > arr->capacity_b)
 		return END_POS_OUT_OF_BOUNDS;
-	memcpy((u8 *)arrp->ptr + start_b, in_p, n_b);
-	arrp->length = MAX(arrp->length, (start_b + n_b) / arrp->memb_size);
+	memcpy((u8 *)arr->ptr + start_b, in_p, n_b);
+	arr->length = MAX(arr->length, (start_b + n_b) / arr->memb_size);
 
-	return 0;
+	return NIL;
 }
 
-err32_t ARR_copy_range_from(Array *arrp, size_t start, void *out_p, size_t n)
+err32_t ARR_copy_range_from(const Array arr, size_t start, void *out_p, size_t n)
 {
-	if (ARR_is_err(*arrp))
+	if (ARR_is_err(arr))
 		return ARR_PARAM_IS_ERR;
 	if (out_p == NULL)
 		return PTR_PARAM_IS_NULL;
-	if (start >= arrp->length)
+	if (start >= arr.length)
 		return START_POS_OUT_OF_BOUNDS;
-	if (start + n > arrp->length)
+	if (start + n > arr.length)
 		return END_POS_OUT_OF_BOUNDS;
-	memcpy(out_p, (u8 *)arrp->ptr + (start * arrp->memb_size), n * arrp->memb_size);
+	memcpy(out_p, (u8 *)arr.ptr + (start * arr.memb_size), n * arr.memb_size);
 
-	return 0;
+	return NIL;
 }
 
-Result(voidp) ARR_get_at(Array arr, size_t index)
+err32_t ARR_copy_range_from_B(const Array arr, size_t start_b, void *out_p, size_t n_b)
 {
-	err32_t err = 0;
+	if (ARR_is_err(arr))
+		return ARR_PARAM_IS_ERR;
+	const size_t arr_size_b = arr.length * arr.memb_size;
+	if (start_b >= arr_size_b)
+		return START_POS_OUT_OF_BOUNDS;
+	if (start_b + n_b > arr_size_b)
+		return END_POS_OUT_OF_BOUNDS;
+	memcpy(out_p, (u8 *)arr.ptr + start_b, n_b);
+
+	return NIL;
+}
+
+Result(void_p) ARR_get_at(const Array arr, size_t index)
+{
+	err32_t err = NIL;
 	if (ARR_is_err(arr))
 		err = ARR_PARAM_IS_ERR;
 	if (index >= arr.length)
 		err = GENERIC_INDEX_OUT_OF_BOUNDS;
-	return RES((!err) ? (u8 *)arr.ptr + index*arr.memb_size : NULL, err, voidp);
+	return RES((!err) ? (u8 *)arr.ptr + index*arr.memb_size : NULL, err, void_p);
 }
 
-err32_t ARR_copy_one_from(Array arr, size_t index, void *out)
+err32_t ARR_copy_one_from(const Array arr, size_t index, void *out)
 {
 	if (ARR_is_err(arr))
 		return ARR_PARAM_IS_ERR;
@@ -181,7 +195,7 @@ err32_t ARR_copy_one_from(Array arr, size_t index, void *out)
 		return GENERIC_INDEX_OUT_OF_BOUNDS;
 	memcpy(out, (u8 *)arr.ptr + index*arr.memb_size, arr.memb_size);
 
-	return 0;
+	return NIL;
 }
 
 err32_t ARR_copy_one_to(Array *arrp, size_t index, void *in)
@@ -194,13 +208,13 @@ err32_t ARR_copy_one_to(Array *arrp, size_t index, void *in)
 		return GENERIC_INDEX_OUT_OF_BOUNDS;
 	memcpy((u8 *)arrp->ptr + index*arrp->memb_size, in, arrp->memb_size);
 	
-	return 0;
+	return NIL;
 }
 
-Result(voidp) ARR_push_back(Array *arrp, void *in)
+Result(void_p) ARR_push_back(Array *arrp, void *in)
 {
 	if (ARR_is_err(*arrp))
-		return RES(NULL, ARR_PARAM_IS_ERR, voidp);
+		return RES(NULL, ARR_PARAM_IS_ERR, void_p);
 	if ((arrp->capacity_b - (arrp->length*arrp->memb_size)) < arrp->memb_size)
 		ARR_resize(arrp, arrp->length+1);
 	
@@ -208,15 +222,15 @@ Result(voidp) ARR_push_back(Array *arrp, void *in)
 	memcpy(copied_to_pos, in, arrp->memb_size);
 	arrp->length++;
 
-	return RES(copied_to_pos, NIL, voidp);
+	return RES(copied_to_pos, NIL, void_p);
 }
 
-Result(voidp) ARR_pop_back(Array *arrp)
+Result(void_p) ARR_pop_back(Array *arrp)
 {
 	if (ARR_is_err(*arrp))
-		return RES(NULL, ARR_PARAM_IS_ERR, voidp);
+		return RES(NULL, ARR_PARAM_IS_ERR, void_p);
 	if (arrp->length == 0)
-		return RES(NULL, DATA_TOO_SMALL_ERR, voidp);
+		return RES(NULL, DATA_TOO_SMALL_ERR, void_p);
 	
 	return ARR_get_at(*arrp, --arrp->length);
 }
@@ -229,7 +243,7 @@ Result(size_t) ARR_search(Array arr, void *target, comp_func cmp)
 			return RES(i, 0, size_t);
 	}
 
-	return RES(-1, TARGET_NOT_IN_ARR, size_t);
+	return RES(-1, GENERIC_NONEXISTENT_ITEM, size_t);
 }
 
 Result(size_t) ARR_search_lesser(Array arr, void *target, comp_func cmp)
@@ -240,7 +254,7 @@ Result(size_t) ARR_search_lesser(Array arr, void *target, comp_func cmp)
 			return RES(i, 0, size_t);
 	}
 
-	return RES(-1, TARGET_NOT_IN_ARR, size_t);
+	return RES(-1, GENERIC_NONEXISTENT_ITEM, size_t);
 }
 
 Result(size_t) ARR_search_greater(Array arr, void *target, comp_func cmp)
@@ -251,7 +265,7 @@ Result(size_t) ARR_search_greater(Array arr, void *target, comp_func cmp)
 			return RES(i, 0, size_t);
 	}
 
-	return RES(-1, TARGET_NOT_IN_ARR, size_t);
+	return RES(-1, GENERIC_NONEXISTENT_ITEM, size_t);
 }
 
 void ARR_accumulate(Array arr, accum_func accum, void *out)

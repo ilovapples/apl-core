@@ -3,8 +3,8 @@
 #include <stdio.h>
 #include <wchar.h>
 
-#include "aplcore/arena.h"
-#include "aplcore/util/log.h"
+#include "structs/arena.h"
+#include "util/log.h"
 
 Result(Arena) ARENA_create_zeroed(size_t size)
 {
@@ -12,6 +12,7 @@ Result(Arena) ARENA_create_zeroed(size_t size)
 	ret.ptr = malloc(size);
 	memset(ret.ptr, 0, size);
 	ret.capacity = size;
+	ret.freed = false;
 	Result(Array) res = ARR_create_empty(1, sizeof(ArenaBlock));
 	if (res.err != NIL)
 		return RES(ERR_ARENA, res.err, Arena);
@@ -27,8 +28,12 @@ Result(Arena) ARENA_create_zeroed(size_t size)
 
 inline void ARENA_free(Arena *arena)
 {
+	if (arena->freed)
+		return;
+	ologf(LOG_DEBUG, "freeing arena(capacity=%zu)\n", arena->capacity);
 	ARR_free(&arena->blocks_arr);
 	free(arena->ptr);
+	arena->freed = true;
 }
 
 Result(ArenaBlock_p) ARENA_get_block(Arena *arena_p, size_t size)
@@ -74,10 +79,14 @@ Result(ArenaBlock_p) ARENA_get_block(Arena *arena_p, size_t size)
 					.len = remaining_len,
 				},
 			};
+#ifndef APLCORE__DISABLE_LOGGING
 			ArenaBlock *temp = ARR_push_back(&arena_p->blocks_arr, &new_block).val;
 			ologf(LOG_DEBUG, "new block:\n    --> %s\n", ARENA_debug_block_str(temp, arena_p, true));
 			ologf(LOG_DEBUG, "block_arr(length=%zu, memb_size=%zu)\n",
 					arena_p->blocks_arr.length, arena_p->blocks_arr.memb_size);
+#else
+			ARR_push_back(&arena_p->blocks_arr, &new_block);
+#endif
 
 			// V must be accessed again since the array may be resized by ARR_push_back V
 			cur = ARR_get_at(arena_p->blocks_arr, i).val;
@@ -98,7 +107,7 @@ Result(ArenaBlock_p) ARENA_get_block(Arena *arena_p, size_t size)
 	/* sufficient_contiguous_blocks_range = SCBR */
 	pos_len scbr = {0};
 	cur = ARR_get_at(arena_p->blocks_arr, 0).val;
-	Result(voidp) res = {0};
+	Result(void_p) res = {0};
 	while (cur->in_use && scbr.pos < arena_p->blocks_arr.length)
 	{
 		scbr.pos++;
@@ -201,9 +210,9 @@ void ARENA_sort_blocks_arr(Arena arena)
 Result(Array) ARR_create_empty_in_arena(Arena *arena_p, size_t nmemb, size_t memb_size)
 {
 	if (nmemb == 0)
-		return RES(ERR_ARR, ARR_ALLOC_NMEMB_PARAM_IS_ZERO, Array);
+		return RES(ERR_ARR, ALLOC_NMEMB_PARAM_IS_ZERO, Array);
 	if (memb_size == 0)
-		return RES(ERR_ARR, ARR_ALLOC_MEMB_SIZE_PARAM_IS_ZERO, Array);
+		return RES(ERR_ARR, ALLOC_MEMB_SIZE_PARAM_IS_ZERO, Array);
 
 	Array ret = {0};
 
@@ -227,9 +236,9 @@ Result(Array) ARR_create_empty_in_arena(Arena *arena_p, size_t nmemb, size_t mem
 Result(Array) ARR_create_zeroed_in_arena(Arena *arena_p, size_t nmemb, size_t memb_size)
 {
 	if (nmemb == 0)
-		return RES(ERR_ARR, ARR_ALLOC_NMEMB_PARAM_IS_ZERO, Array);
+		return RES(ERR_ARR, ALLOC_NMEMB_PARAM_IS_ZERO, Array);
 	if (memb_size == 0)
-		return RES(ERR_ARR, ARR_ALLOC_MEMB_SIZE_PARAM_IS_ZERO, Array);
+		return RES(ERR_ARR, ALLOC_MEMB_SIZE_PARAM_IS_ZERO, Array);
 
 	Array ret = {0};
 
@@ -254,7 +263,8 @@ Result(Array) ARR_create_zeroed_in_arena(Arena *arena_p, size_t nmemb, size_t me
 inline err32_t ARR_free(Array *arr)
 {
 	if (arr->freed)
-		return ARR_ALREADY_FREED;
+		return GENERIC_DOUBLE_FREE_ERR;
+
 	if (arr->owner == NULL)
 	{
 		free(arr->ptr);
@@ -265,6 +275,25 @@ inline err32_t ARR_free(Array *arr)
 	ARENA_return_block(arr->owner, (u8 *)arr->ptr - (u8 *)arr->owner->ptr);
 	arr->owner = NULL;
 	arr->freed = true;
+	return NIL;
+}
+
+inline err32_t STR_free(String *str_p)
+{
+	if (str_p->freed)
+		return GENERIC_DOUBLE_FREE_ERR;
+
+	if (str_p->owner == NULL)
+	{
+		free(str_p->ptr);
+		str_p->freed = true;
+		return NIL;
+	}
+
+	ARENA_return_block(str_p->owner, (u8 *)str_p->ptr - (u8 *)str_p->owner->ptr);
+	str_p->owner = NULL;
+	str_p->freed = true;
+
 	return NIL;
 }
 

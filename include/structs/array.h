@@ -4,12 +4,9 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-#include "aplcore/types.h"
-#include "aplcore/util/error.h"
-#include "aplcore/polymorph.h"
-
-#define MAX(a,b) (((a) > (b)) ? (a) : (b))
-#define MIN(a,b) (((a) < (b)) ? (a) : (b))
+#include "types.h"
+#include "util/error.h"
+#include "polymorph.h"
 
 typedef struct Arena Arena;
 
@@ -25,7 +22,6 @@ typedef struct Array {
 #define __array_of_T(type) Array_##type
 
 #define ArrayT(type) __array_of_T(type)
-typedef char *char_p;
 typedef Array ArrayT(s8), ArrayT(s16), ArrayT(s32), ArrayT(s64),
               ArrayT(u8), ArrayT(u16), ArrayT(u32), ArrayT(u64),
 		  ArrayT(char), ArrayT(char_p),
@@ -36,13 +32,9 @@ typedef Array ArrayT(s8), ArrayT(s16), ArrayT(s32), ArrayT(s64),
 
 MKSTRCT_Result(Array);
 
-typedef void *voidp;
-#define ptr_lval(p, type) (*(type *)(p))
-MKSTRCT_Result(voidp);
-
 #define ARR_for_each(arr, cur, type) \
 	for (size_t i = 0; i < (arr).length \
-		 || (0 && (cur = ptr_lval(ARR_get_at((arr), i).val, type))); ++i)
+		 || (0 && (cur = lval_p(ARR_get_at((arr), i).val, type))); ++i)
 #define ARR_for_each_p(arr, cur) \
 	for (size_t i = 0; i < (arr).length \
 		 && (cur = ARR_get_at((arr), i).val); ++i)
@@ -79,7 +71,7 @@ err32_t ARR_free(Array *arr);
  * size of FROM (from.nmemb)
  * -- Returns: the allocated `Array` structure with a copy of the data stored
  * in FROM */
-Result(Array) ARR_clone(Array from);
+Result(Array) ARR_clone(const Array from);
 
 /* Resize the existing `Array` structure pointed to by ARRP to NMEMB elements
  * without initializing new memory.
@@ -116,17 +108,20 @@ err32_t ARR_copy_at_front_B(Array *arrp, const void *p, size_t n_b);
  *  - -4: ARRP points to an error `Array`
  */
 err32_t ARR_copy_range_to(Array *arrp, size_t start, const void *p, size_t n);
-
 err32_t ARR_copy_range_to_B(Array *arrp, size_t start_b, const void *p, size_t n_b);
 
-Result(voidp) ARR_get_at(Array arr, size_t index);
-err32_t ARR_copy_one_from(Array arr, size_t index, void *out);
+err32_t ARR_copy_range_from(const Array arr, size_t start, void *out_p, size_t n);
+err32_t ARR_copy_range_from_B(const Array arr, size_t start_b, void *out_p, size_t n_b);
+
+Result(void_p) ARR_get_at(const Array arr, size_t index);
+err32_t ARR_copy_one_from(const Array arr, size_t index, void *out);
 err32_t ARR_copy_one_to(Array *arrp, size_t index, void *in);
 
 /* Copies the value pointed to by IN to one past the last element of 
  * the array, resizing if necessary. */
-Result(voidp) ARR_push_back(Array *arrp, void *in);
-Result(voidp) ARR_pop_back(Array *arrp);
+Result(void_p) ARR_push_back(Array *arrp, void *in);
+Result(void_p) ARR_pop_back(Array *arrp);
+
 Result(size_t) ARR_search(Array arr, void *target, comp_func cmp);
 Result(size_t) ARR_search_lesser(Array arr, void *target, comp_func cmp);
 Result(size_t) ARR_search_greater(Array arr, void *target, comp_func cmp);

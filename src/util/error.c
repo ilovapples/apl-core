@@ -2,7 +2,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "aplcore/util/error.h"
+#include "util/error.h"
+
+err64_t cur_err;
 
 void eerror(err32_t err_code, const char *fmt, ...)
 {

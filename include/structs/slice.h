@@ -3,7 +3,7 @@
 
 #include <stddef.h>
 
-#include "aplcore/array.h"
+#include "structs/array.h"
 
 typedef struct Slice {
 	void *ptr;

@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <wchar.h>
 
-#include "aplcore/util/log.h"
+#include "util/log.h"
 
 void vflogf(LOG_TYPE type, FILE *stream, const char *fmt, va_list arg_list)
 {
@@ -22,22 +22,6 @@ void vflogf(LOG_TYPE type, FILE *stream, const char *fmt, va_list arg_list)
 	}
 	vfprintf(stream, fmt, arg_list);
 	fprintf(stream, LOG_END);
-}
-
-void flogf(LOG_TYPE type, FILE *stream, const char *fmt, ...)
-{
-	va_list arg_list;
-	va_start(arg_list, fmt);
-	vflogf(type, stream, fmt, arg_list);
-	va_end(arg_list);
-}
-
-void ologf(LOG_TYPE type, const char *fmt, ...)
-{
-	va_list arg_list;
-	va_start(arg_list, fmt);
-	vflogf(type, stdout, fmt, arg_list);
-	va_end(arg_list);
 }
 
 void errlogf(err32_t err_code, const char *fmt, ...)
@@ -65,7 +49,6 @@ void print_info(void)
 }
 
 
-/* wide-char funcs */
 void vfwlogf(LOG_TYPE type, FILE *stream, const wchar_t *fmt, va_list arg_list)
 {
 	switch (type) {
@@ -85,22 +68,6 @@ void vfwlogf(LOG_TYPE type, FILE *stream, const wchar_t *fmt, va_list arg_list)
 	}
 	vfwprintf(stream, fmt, arg_list);
 	fwprintf(stream, TOWIDE(LOG_END));
-}
-
-void fwlogf(LOG_TYPE type, FILE *stream, const wchar_t *fmt, ...)
-{
-	va_list arg_list;
-	va_start(arg_list, fmt);
-	vfwlogf(type, stream, fmt, arg_list);
-	va_end(arg_list);
-}
-
-void owlogf(LOG_TYPE type, const wchar_t *fmt, ...)
-{
-	va_list arg_list;
-	va_start(arg_list, fmt);
-	vfwlogf(type, stdout, fmt, arg_list);
-	va_end(arg_list);
 }
 
 void werrlogf(err32_t err_code, const wchar_t *fmt, ...)
@@ -126,3 +93,53 @@ void wprint_info(void)
 			L" version " TOWIDE(__VERSION__) L" C standard version %ld.\n",
 			__STDC_VERSION__);
 }
+
+#ifndef APLCORE__DISABLE_LOGGING
+void flogf(LOG_TYPE type, FILE *stream, const char *fmt, ...)
+{
+	va_list arg_list;
+	va_start(arg_list, fmt);
+	vflogf(type, stream, fmt, arg_list);
+	va_end(arg_list);
+}
+
+inline void ologf(LOG_TYPE type, const char *fmt, ...)
+{
+	va_list arg_list;
+	va_start(arg_list, fmt);
+	vflogf(type, stdout, fmt, arg_list);
+	va_end(arg_list);
+}
+
+inline void elogf(LOG_TYPE type, const char *fmt, ...)
+{
+	va_list arg_list;
+	va_start(arg_list, fmt);
+	vflogf(type, stderr, fmt, arg_list);
+	va_end(arg_list);
+}
+
+void fwlogf(LOG_TYPE type, FILE *stream, const wchar_t *fmt, ...)
+{
+	va_list arg_list;
+	va_start(arg_list, fmt);
+	vfwlogf(type, stream, fmt, arg_list);
+	va_end(arg_list);
+}
+
+void owlogf(LOG_TYPE type, const wchar_t *fmt, ...)
+{
+	va_list arg_list;
+	va_start(arg_list, fmt);
+	vfwlogf(type, stdout, fmt, arg_list);
+	va_end(arg_list);
+}
+
+void ewlogf(LOG_TYPE type, const wchar_t *fmt, ...)
+{
+	va_list arg_list;
+	va_start(arg_list, fmt);
+	vfwlogf(type, stderr, fmt, arg_list);
+	va_end(arg_list);
+}
+#endif

@@ -3,9 +3,10 @@
 
 #include <stdbool.h>
 
-#include "aplcore/array.h"
-#include "aplcore/slice.h"
-#include "aplcore/util/error.h"
+#include "structs/array.h"
+#include "structs/string.h"
+#include "structs/slice.h"
+#include "util/error.h"
 
 typedef struct ArenaBlock {
 	pos_len poslen; // pos is byte offset from Arena::ptr, len is also in bytes
@@ -19,6 +20,7 @@ typedef struct Arena {
 	void *ptr;
 	size_t capacity;
 	ArrayT(ArenaBlock) blocks_arr;
+	bool freed;
 } Arena;
 MKSTRCT_Result(Arena);
 
