@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#define APLCORE__INCLUDE_WIDE_FUNCS
 #include "util/error.h"
 
 err64_t cur_err;
@@ -16,7 +17,6 @@ void eerror(err32_t err_code, const char *fmt, ...)
 		exit(err_code);
 }
 
-#ifdef APLCORE__INCLUDE_WIDE_FUNCS
 void ewerror(err32_t err_code, const wchar_t *fmt, ...)
 {
 	va_list arg_list;
@@ -26,7 +26,6 @@ void ewerror(err32_t err_code, const wchar_t *fmt, ...)
 	if (err_code > -5280)
 		exit(err_code);
 }
-#endif
 
 #if 0
 #define IES "invalid error"

@@ -19,20 +19,14 @@
 	#define wc_fputs(s, stream) fputs(s, stream)
 	#define wc_memset(buf, c, n) memset(buf, c, n)
 
-	#ifdef APLCORE__UTIL__LOG_H
-		#define wc_ologf(log_type, fmt, ...) ologf(log_type, fmt, ##__VA_ARGS__)
-		#define wc_elogf(log_type, fmt, ...) elogf(log_type, fmt, ##__VA_ARGS__)
-		#define wc_flogf(log_type, stream, fmt, ...) flogf(log_type, stream, fmt, ##__VA_ARGS__)
-	#endif
+	#define wc_ologf(log_type, fmt, ...) ologf(log_type, fmt, ##__VA_ARGS__)
+	#define wc_elogf(log_type, fmt, ...) elogf(log_type, fmt, ##__VA_ARGS__)
+	#define wc_flogf(log_type, stream, fmt, ...) flogf(log_type, stream, fmt, ##__VA_ARGS__)
 
-	#if defined(APLCORE__UTIL__LOG_H) || defined(APLCORE__UTIL__ERROR_H)
-		#define wc_errlogf(err_code, fmt, ...) errlogf(err_code, fmt, ##__VA_ARGS__)
-		#define wc_eerror(err_code, fmt, ...) eerror(err_code, fmt, ##__VA_ARGS__)
-	#endif
+	#define wc_errlogf(err_code, fmt, ...) errlogf(err_code, fmt, ##__VA_ARGS__)
+	#define wc_eerror(err_code, fmt, ...) eerror(err_code, fmt, ##__VA_ARGS__)
 
-	#if defined(APLCORE__ARENA_H)
-		#define wc_ARENA_debug_block_str(block_p, arena_p, is_print_spec_addr) ARENA_debug_block_str(block_p, arena_p, is_print_spec_addr)
-	#endif
+	#define wc_ARENA_debug_block_str(block_p, arena_p, is_print_spec_addr) ARENA_debug_block_str(block_p, arena_p, is_print_spec_addr)
 #else
 	typedef wchar_t wc_char, *wc_char_p;
 	#define wc_printf(fmt, ...) wprintf(fmt, ##__VA_ARGS__)
@@ -41,20 +35,14 @@
 	#define wc_fputs(s, stream) fputws(s, stream)
 	#define wc_memset(buf, c, n) wmemset(buf, c, n)
 
-	#ifdef APLCORE__UTIL__LOG_H
-		#define wc_elogf(log_type, fmt, ...) ewlogf(log_type, fmt, ##__VA_ARGS__)
-		#define wc_ologf(log_type, fmt, ...) owlogf(log_type, fmt, ##__VA_ARGS__)
-		#define wc_flogf(log_type, stream, fmt, ...) fwlogf(log_type, stream, fmt, ##__VA_ARGS__)
-	#endif
+	#define wc_elogf(log_type, fmt, ...) ewlogf(log_type, fmt, ##__VA_ARGS__)
+	#define wc_ologf(log_type, fmt, ...) owlogf(log_type, fmt, ##__VA_ARGS__)
+	#define wc_flogf(log_type, stream, fmt, ...) fwlogf(log_type, stream, fmt, ##__VA_ARGS__)
 
-	#if defined(APLCORE__UTIL__LOG_H) || defined(APLCORE__UTIL__ERROR_H)
-		#define wc_errlogf(err_code, fmt, ...) werrlogf(err_code, fmt, ##__VA_ARGS__)
-		#define wc_eerror(err_code, fmt, ...) ewerror(err_code, fmt, ##__VA_ARGS__)
-	#endif
+	#define wc_errlogf(err_code, fmt, ...) werrlogf(err_code, fmt, ##__VA_ARGS__)
+	#define wc_eerror(err_code, fmt, ...) ewerror(err_code, fmt, ##__VA_ARGS__)
 
-	#if defined(APLCORE__ARENA_H)
-		#define wc_ARENA_debug_block_str(block_p, arena_p, is_print_spec_addr) ARENA_debug_block_wcs(block_p, arena_p, is_print_spec_addr)
-	#endif
+	#define wc_ARENA_debug_block_str(block_p, arena_p, is_print_spec_addr) ARENA_debug_block_wcs(block_p, arena_p, is_print_spec_addr)
 #endif
 
 #ifdef APLCORE__ARENA_H

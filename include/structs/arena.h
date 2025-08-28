@@ -40,7 +40,7 @@ Result(Arena) ARENA_create_zeroed(size_t size);
  * have to allocate and free several separate blocks of memory; you only have
  * to allocate/free a couple, depending on how many different arenas you need.
  */
-void ARENA_free(Arena *arena);
+err32_t ARENA_free(Arena *arena);
 
 /* Requests and obtains pointer to a structure of information regarding the
  * requested block of memory of size SIZE and the location at which it was
@@ -72,6 +72,10 @@ Result(Array) ARR_create_empty_in_arena(Arena *arena_p, size_t nmemb, size_t mem
  * from the operation system.
  */
 Result(Array) ARR_create_zeroed_in_arena(Arena *arena_p, size_t nmemb, size_t memb_size);
+
+
+Result(String) STR_create_empty_in_arena(Arena *arena_p, size_t length);
+Result(String) STR_create_zeroed_in_arena(Arena *arena_p, size_t length);
 
 char *ARENA_debug_block_str(ArenaBlock *block_p, Arena *owner, bool print_spec);
 wchar_t *ARENA_debug_block_wcs(ArenaBlock *block_p, Arena *owner, bool print_spec);

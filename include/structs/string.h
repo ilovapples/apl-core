@@ -47,7 +47,7 @@ Result(String) STR_clone_N(const String from, size_t n);
 err32_t STR_resize(String *str_p, size_t capacity);
 err32_t STR_shrink(String *str_p);
 
-/* copy the bytes at IN_P into STR_P. Doesn't copy IN_P's null terminator.
+/* copy the bytes at IN_P into STR_P. Copies IN_P's null terminator.
  */
 err32_t STR_copy_cstr_at_front(String *str_p, const char *in_p);
 /* like `STR_copy_cstr_at_front` but copies N characters using strncpy, so if
@@ -57,7 +57,7 @@ err32_t STR_copy_cstr_at_front(String *str_p, const char *in_p);
  */
 err32_t STR_copy_N_at_front(String *str_p, const char *in_p, size_t n);
 
-/* copy the bytes at IN_P into STR_P, offset START bytes. Doesn't copy IN_P's
+/* copy the bytes at IN_P into STR_P, offset START bytes. Copies IN_P's
  * null terminator. */
 err32_t STR_copy_cstr_to(String *str_p, size_t start, const char *in_p);
 /* like `STR_copy_str_to` but copies N characters using strncpy, so if 
@@ -79,5 +79,7 @@ err32_t STR_copy_N_from_pos(const String str, size_t start, char *out_p, size_t 
 err32_t STR_concat_cstr(String *lstr_p, const char *rcstr);
 /* concat a str (aka String) to a String */
 err32_t STR_concat_str(String *lstr_p, const String rstr);
+
+
 
 #endif /* APLCORE__STRING_H */

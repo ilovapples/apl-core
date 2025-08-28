@@ -16,9 +16,7 @@ Result(String) STR_create_empty(size_t length)
 	ret.freed = false;
 
 	return RES(ret,
-			cur_err = ((STR_is_err(ret))
-				? MALLOC_FAILURE
-				: NIL),
+			cur_err = ((STR_is_err(ret)) ? MALLOC_FAILURE : NIL),
 			String);
 }
 
@@ -31,10 +29,22 @@ Result(String) STR_create_zeroed(size_t length)
 	ret.freed = false;
 
 	return RES(ret,
-			cur_err = ((STR_is_err(ret))
-				? MALLOC_FAILURE
-				: NIL),
+			cur_err = ((STR_is_err(ret)) ? MALLOC_FAILURE : NIL),
 			String);
+}
+
+inline Result(String) STR_from_cstr(const char *cstr)
+{
+	if (cstr == NULL)
+		return RES(ERR_STR, PTR_PARAM_IS_NULL, String);
+	const size_t cstr_len = strlen(cstr);
+	Result(String) res = STR_create_empty(cstr_len);
+	if (iserr(res.err))
+		return RES(ERR_STR, cur_err, String);
+	if (iserr(STR_copy_cstr_at_front(&res.val, cstr)))
+		return RES(ERR_STR, cur_err, String);
+
+	return RES(res.val, cur_err = NIL, String);
 }
 
 inline size_t STR_len(const String str)
@@ -102,7 +112,7 @@ inline err32_t STR_shrink(String *str_p)
 	return STR_resize(str_p, STR_len(*str_p));
 }
 
-err32_t STR_copy_str_at_front(String *str_p, const char *in_p)
+err32_t STR_copy_cstr_at_front(String *str_p, const char *in_p)
 {
 	if (str_p == NULL)
 		return cur_err = STR_P_PARAM_IS_NULL;
@@ -111,10 +121,10 @@ err32_t STR_copy_str_at_front(String *str_p, const char *in_p)
 	if (in_p == NULL)
 		return cur_err = PTR_PARAM_IS_NULL;
 
-	const size_t in_p_len = strnlen(in_p, str_p->capacity+1+1);
-	if (in_p_len == str_p->capacity+1+1)
+	const size_t in_p_len = strnlen(in_p, str_p->capacity+1);
+	if (in_p_len == str_p->capacity+1)
 		return cur_err = DATA_TOO_BIG_ERR;
-	strncpy(str_p->ptr, in_p, in_p_len);
+	strncpy(str_p->ptr, in_p, in_p_len+1);
 
 	return cur_err = NIL;
 }
@@ -149,7 +159,7 @@ err32_t STR_copy_cstr_to(String *str_p, size_t start, const char *in_p)
 	if (in_p == NULL)
 		return cur_err = PTR_PARAM_IS_NULL;
 
-	strncpy(str_p->ptr + start, in_p, in_p_len);
+	strncpy(str_p->ptr + start, in_p, in_p_len+1);
 
 	return cur_err = NIL;
 }

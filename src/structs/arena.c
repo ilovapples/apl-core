@@ -23,28 +23,35 @@ Result(Arena) ARENA_create_zeroed(size_t size)
 	first_block->poslen.pos = 0;
 	first_block->poslen.len = size;
 
-	return RES(ret, ARENA_is_err(ret), Arena);
+	return RES(ret,
+			cur_err = ((ARENA_is_err(ret)) ? MALLOC_FAILURE : NIL),
+			Arena);
 }
 
-inline void ARENA_free(Arena *arena)
+inline err32_t ARENA_free(Arena *arena)
 {
 	if (arena->freed)
-		return;
+		return cur_err = GENERIC_DOUBLE_FREE_ERR;
 	ologf(LOG_DEBUG, "freeing arena(capacity=%zu)\n", arena->capacity);
 	ARR_free(&arena->blocks_arr);
 	free(arena->ptr);
 	arena->freed = true;
+
+	return cur_err = NIL;
 }
 
 Result(ArenaBlock_p) ARENA_get_block(Arena *arena_p, size_t size)
 {
 	ologf(LOG_DEBUG, "requested size=%zu\n", size);
-	if (arena_p == NULL || size == 0)
-		return RES(NULL, 1, ArenaBlock_p);
+	if (arena_p == NULL)
+		return RES(NULL, cur_err = ARENA_P_PARAM_IS_NULL, ArenaBlock_p);
+	if (size == 0)
+		return RES(NULL, cur_err = ALLOC_SIZE_PARAM_IS_ZERO, ArenaBlock_p);
 
 	if (arena_p->capacity < size)
-		return RES(NULL, 2, ArenaBlock_p);
+		return RES(NULL, cur_err = ALLOC_SIZE_PARAM_IS_TOO_BIG, ArenaBlock_p);
 	ArenaBlock_p cur = NULL;
+	Result(void_p) temp_res;
 	// capacity is exactly right and no blocks exist yet
 	if (arena_p->capacity == size && arena_p->blocks_arr.length == 0)
 	{
@@ -55,17 +62,26 @@ Result(ArenaBlock_p) ARENA_get_block(Arena *arena_p, size_t size)
 				.len = size,
 			},
 		};
+		/* TODO: THIS IS NOT DONE BEING REVISED, WHICH IS OBVIOUS BY THE
+		 * SYNTAX ERRORS*/
 
-		ArenaBlock_p new_block_p = ARR_push_back(&arena_p->blocks_arr, &new_block).val;
-		ologf(LOG_DEBUG, "new block:\n    --> %s\n", ARENA_debug_block_str(new_block_p, arena_p, true));
+		if (iserr((temp_res = ARR_push_back(&arena_p->blocks_arr, &new_block)).err))
+			return RES(NULL, cur_err, ArenaBlock_p);
+
+#ifndef APLCORE__DISABLE_LOGGING
+		ologf(LOG_DEBUG, "new block:\n    --> %s\n", ARENA_debug_block_str(temp_res.val, arena_p, true));
 		ologf(LOG_DEBUG, "block_arr(length=%zu, memb_size=%zu)\n",
 				arena_p->blocks_arr.length, arena_p->blocks_arr.memb_size);
-		return RES(new_block_p, (new_block_p == NULL), ArenaBlock_p);
+#endif
+		return RES(temp_res.val, cur_err = NIL, ArenaBlock_p);
 	}
 
 	for (size_t i = 0; i < arena_p->blocks_arr.length; ++i)
 	{
-		cur = ARR_get_at(arena_p->blocks_arr, i).val;
+		temp_res = ARR_get_at(arena_p->blocks_arr, i);
+		if (iserr(temp_res.err))
+			return RES(NULL, cur_err, ArenaBlock_p);
+		cur = temp_res.val;
 		if (cur->in_use || cur->poslen.len < size)
 			continue;
 
@@ -79,28 +95,29 @@ Result(ArenaBlock_p) ARENA_get_block(Arena *arena_p, size_t size)
 					.len = remaining_len,
 				},
 			};
-#ifndef APLCORE__DISABLE_LOGGING
-			ArenaBlock *temp = ARR_push_back(&arena_p->blocks_arr, &new_block).val;
-			ologf(LOG_DEBUG, "new block:\n    --> %s\n", ARENA_debug_block_str(temp, arena_p, true));
+
+			if (iserr((temp_res = ARR_push_back(&arena_p->blocks_arr, &new_block)).err))
+				return RES(NULL, cur_err, ArenaBlock_p);
+
+			ologf(LOG_DEBUG, "new block:\n    --> %s\n", ARENA_debug_block_str(temp_res.val, arena_p, true));
 			ologf(LOG_DEBUG, "block_arr(length=%zu, memb_size=%zu)\n",
 					arena_p->blocks_arr.length, arena_p->blocks_arr.memb_size);
-#else
-			ARR_push_back(&arena_p->blocks_arr, &new_block);
-#endif
 
-			// V must be accessed again since the array may be resized by ARR_push_back V
-			cur = ARR_get_at(arena_p->blocks_arr, i).val;
+			temp_res = ARR_get_at(arena_p->blocks_arr, i);
+			if (iserr(temp_res.err))
+				return RES(NULL, cur_err, ArenaBlock_p);
+			cur = temp_res.val;
 			cur->poslen.len = size;
 			cur->in_use = true;
 
-			return RES(cur, (cur == NULL), ArenaBlock_p);
+			return RES(cur, cur_err = NIL, ArenaBlock_p);
 		}
 		ologf(LOG_DEBUG, "found sizeable block:\n    --> %s\n", ARENA_debug_block_str(cur, arena_p, true));
 
 		cur->poslen.len = size;
 		cur->in_use = true;
 
-		return RES(cur, (cur == NULL), ArenaBlock_p);
+		return RES(cur, cur_err = NIL, ArenaBlock_p);
 	}
 	cur = NULL;
 
@@ -236,9 +253,9 @@ Result(Array) ARR_create_empty_in_arena(Arena *arena_p, size_t nmemb, size_t mem
 Result(Array) ARR_create_zeroed_in_arena(Arena *arena_p, size_t nmemb, size_t memb_size)
 {
 	if (nmemb == 0)
-		return RES(ERR_ARR, ALLOC_NMEMB_PARAM_IS_ZERO, Array);
+		return RES(ERR_ARR, cur_err = ALLOC_NMEMB_PARAM_IS_ZERO, Array);
 	if (memb_size == 0)
-		return RES(ERR_ARR, ALLOC_MEMB_SIZE_PARAM_IS_ZERO, Array);
+		return RES(ERR_ARR, cur_err = ALLOC_MEMB_SIZE_PARAM_IS_ZERO, Array);
 
 	Array ret = {0};
 
@@ -257,45 +274,110 @@ Result(Array) ARR_create_zeroed_in_arena(Arena *arena_p, size_t nmemb, size_t me
 	ret.memb_size = memb_size;
 	ret.owner = arena_p;
 
-	return RES(ret, ARR_is_err(ret), Array);
+	return RES(ret,
+			cur_err = (ARR_is_err(ret) ? MALLOC_FAILURE : NIL),
+			Array);
 }
 
 inline err32_t ARR_free(Array *arr)
 {
 	if (arr->freed)
-		return GENERIC_DOUBLE_FREE_ERR;
+		return cur_err = GENERIC_DOUBLE_FREE_ERR;
 
 	if (arr->owner == NULL)
 	{
 		free(arr->ptr);
 		arr->freed = true;
-		return NIL;
+		return cur_err = NIL;
 	}
 
 	ARENA_return_block(arr->owner, (u8 *)arr->ptr - (u8 *)arr->owner->ptr);
 	arr->owner = NULL;
 	arr->freed = true;
-	return NIL;
+	return cur_err = NIL;
+}
+
+/* string in arena functions */
+Result(String) STR_create_empty_in_arena(Arena *arena_p, size_t length)
+{
+	String ret = {0};
+
+	if (arena_p == NULL)
+		ret.ptr = malloc(length+1);
+	else
+	{
+		Result(ArenaBlock_p) res = ARENA_get_block(arena_p, length+1);
+		if (iserr(res.err))
+			return RES(ERR_STR, res.err, String);
+		ret.ptr = (char *)arena_p->ptr + res.val->poslen.pos;
+	}
+	
+	ret.capacity = length;
+	ret.owner = arena_p;
+
+	return RES(ret,
+			cur_err = (STR_is_err(ret) ? MALLOC_FAILURE : NIL),
+			String);
+}
+
+Result(String) STR_create_zeroed_in_arena(Arena *arena_p, size_t length)
+{
+	String ret = {0};
+
+	if (arena_p == NULL)
+		ret.ptr = calloc(length+1, 1);
+	else
+	{
+		Result(ArenaBlock_p) res = ARENA_get_block(arena_p, length+1);
+		if (res.err != NIL)
+			return RES(ERR_STR, cur_err, String);
+		ret.ptr = (char *)arena_p->ptr + res.val->poslen.pos;
+		memset(ret.ptr, 0, length+1);
+	}
+
+	ret.capacity = length;
+	ret.owner = arena_p;
+
+	return RES(ret,
+			cur_err = (STR_is_err(ret) ? MALLOC_FAILURE : NIL),
+			String);
+}
+
+inline Result(String) STR_from_cstr_in_arena(Arena *arena_p, const char *cstr)
+{
+	if (cstr == NULL)
+		return RES(ERR_STR, PTR_PARAM_IS_NULL, String);
+
+	const size_t cstr_len = strlen(cstr);
+	Result(String) res = STR_create_empty_in_arena(arena_p, cstr_len);
+	if (iserr(res.err))
+		return RES(ERR_STR, cur_err, String);
+
+	if (iserr(STR_copy_cstr_at_front(&res.val, cstr)))
+		return RES(ERR_STR, cur_err, String);
+
+	return RES(res.val, cur_err = NIL, String);
 }
 
 inline err32_t STR_free(String *str_p)
 {
 	if (str_p->freed)
-		return GENERIC_DOUBLE_FREE_ERR;
+		return cur_err = GENERIC_DOUBLE_FREE_ERR;
 
 	if (str_p->owner == NULL)
 	{
 		free(str_p->ptr);
 		str_p->freed = true;
-		return NIL;
+		return cur_err = NIL;
 	}
 
 	ARENA_return_block(str_p->owner, (u8 *)str_p->ptr - (u8 *)str_p->owner->ptr);
 	str_p->owner = NULL;
 	str_p->freed = true;
 
-	return NIL;
+	return cur_err = NIL;
 }
+
 
 char *ARENA_debug_block_str(ArenaBlock *block_p, Arena *owner, bool print_spec)
 {
