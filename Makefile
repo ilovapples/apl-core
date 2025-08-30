@@ -22,7 +22,7 @@ APL_INCL := $(BINC)/$(LIB_NAME)
 all: $(OBJ) \
 	$(LIBFILENAME)
 
-.PHONY: clean export
+.PHONY: clean export clean_export clean_build
 
 # object build commands
 $(LOBJ)/structs-array.o: $(LSRC)/structs/array.c $(LINC)/structs/array.h \
@@ -59,8 +59,11 @@ $(LIBFILENAME): $(OBJS_LIST)
 clean:
 	rm -rf $(LIBFILENAME) $(LOBJ)/* $(BLIB)/$(LIBFILENAME) $(APL_INCL)
 
-export:
+export: $(LIBFILENAME)
 	rm -rf $(BLIB) $(APL_INCL)
 	mkdir $(BLIB) $(APL_INCL)
 	cp -r $(LINC)/* $(APL_INCL)
 	cp $(LIBFILENAME) $(BLIB)
+
+clean_export: clean export
+clean_build: clean $(LIBFILENAME)
