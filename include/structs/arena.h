@@ -76,6 +76,7 @@ Result(Array) ARR_create_zeroed_in_arena(Arena *arena_p, size_t nmemb, size_t me
 
 Result(String) STR_create_empty_in_arena(Arena *arena_p, size_t length);
 Result(String) STR_create_zeroed_in_arena(Arena *arena_p, size_t length);
+Result(String) STR_from_cstr_in_arena(Arena *arena_p, const char *cstr);
 
 char *ARENA_debug_block_str(ArenaBlock *block_p, Arena *owner, bool print_spec);
 wchar_t *ARENA_debug_block_wcs(ArenaBlock *block_p, Arena *owner, bool print_spec);
