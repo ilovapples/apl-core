@@ -67,8 +67,8 @@ clean:
 
 export: $(LIBFILENAME)
 	rm -rf $(APL_INCL)
-	mkdir -p $(BLIB)
-	cp -r $(LINC)/$(LIB_NAME) $(BINC)
+	mkdir -p $(BLIB) $(APL_INCL)
+	cp -r $(LINC)/$(LIB_NAME)/* $(APL_INCL)
 	cp $(LIBFILENAME) $(BLIB)
 
 clean_export: clean export

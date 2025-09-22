@@ -208,9 +208,12 @@ Result(ArenaBlock_p) ARENA_get_block(Arena *arena_p, size_t size)
 err32_t ARENA_return_block(Arena *arena_p, size_t pos)
 {
 	ArenaBlock_p cur = NULL;
+	Result(void_p) get_res;
 	for (size_t i = 0; i < arena_p->blocks_arr.length; ++i)
 	{
-		cur = ARR_get_at(arena_p->blocks_arr, i).val;
+		cur = (get_res = ARR_get_at(arena_p->blocks_arr, i)).val;
+		if (iserr(get_res.err))
+			return get_res.err;
 		if (cur->poslen.pos == pos)
 			break;
 	}
