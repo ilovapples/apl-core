@@ -1,4 +1,4 @@
-#include "structs/slice.h"
+#include "aplcore/structs/slice.h"
 
 // check that poslen is on multiples of memb_size or something
 Result(Slice) SLICE_ptr_irange(void *ptr, iRange irange, size_t memb_size)

@@ -3,7 +3,7 @@
 #include <stdio.h>
 
 #define APLCORE__INCLUDE_WIDE_FUNCS
-#include "util/error.h"
+#include "aplcore/util/error.h"
 
 err64_t cur_err;
 

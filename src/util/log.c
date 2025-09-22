@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <wchar.h>
 
-#include "util/log.h"
+#include "aplcore/util/log.h"
 
 void vflogf(LOG_TYPE type, FILE *stream, const char *fmt, va_list arg_list)
 {
@@ -34,21 +34,6 @@ void errlogf(err32_t err_code, const char *fmt, ...)
 		exit(err_code);
 }
 
-void print_info(void)
-{
-	printf("Compiled on " __DATE__ "at " __TIME__ " with " 
-#ifdef __GNUC__
-	"GCC"
-#elif defined(__clang__)
-	"Clang"
-#elif defined(__INTEL_COMPILER__)
-	"an Intel compiler of"
-#endif
-			" version " __VERSION__ " C standard version %ld.\n",
-			__STDC_VERSION__);
-}
-
-
 void vfwlogf(LOG_TYPE type, FILE *stream, const wchar_t *fmt, va_list arg_list)
 {
 	switch (type) {
@@ -78,20 +63,6 @@ void werrlogf(err32_t err_code, const wchar_t *fmt, ...)
 	va_end(arg_list);
 	if (err_code > -5280)
 		exit(err_code);
-}
-
-void wprint_info(void)
-{
-	wprintf(L"Compiled on " TOWIDE(__DATE__) L"at " TOWIDE(__TIME__) L" with " 
-#ifdef __GNUC__
-	L"GCC"
-#elif defined(__clang__)
-	L"Clang"
-#elif defined(__INTEL_COMPILER__)
-	L"an Intel compiler of"
-#endif
-			L" version " TOWIDE(__VERSION__) L" C standard version %ld.\n",
-			__STDC_VERSION__);
 }
 
 #ifndef APLCORE__DISABLE_LOGGING

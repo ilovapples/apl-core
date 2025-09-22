@@ -4,8 +4,8 @@
 #include <stddef.h>
 #include <sys/types.h>
 
-#include "types.h"
-#include "util/misc.h"
+#include "aplcore/types.h"
+#include "aplcore/util/misc.h"
 
 /* RESULT TYPE */
 #define Resultv1(type) Result_##type

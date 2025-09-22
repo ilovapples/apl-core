@@ -1,10 +1,10 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "types.h"
-#include "structs/array.h"
-#include "util/error.h"
-#include "util/misc.h"
+#include "aplcore/types.h"
+#include "aplcore/structs/array.h"
+#include "aplcore/util/error.h"
+#include "aplcore/util/misc.h"
 
 Result(Array) ARR_create_empty(size_t nmemb, size_t memb_size)
 {

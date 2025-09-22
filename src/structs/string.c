@@ -2,9 +2,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "types.h"
-#include "structs/string.h"
-#include "util/error.h"
+#include "aplcore/types.h"
+#include "aplcore/structs/string.h"
+#include "aplcore/util/error.h"
 
 Result(String) STR_create_empty(size_t length)
 {

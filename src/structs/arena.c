@@ -3,8 +3,8 @@
 #include <stdio.h>
 #include <wchar.h>
 
-#include "structs/arena.h"
-#include "util/log.h"
+#include "aplcore/structs/arena.h"
+#include "aplcore/util/log.h"
 
 Result(Arena) ARENA_create_zeroed(size_t size)
 {
@@ -32,7 +32,9 @@ inline err32_t ARENA_free(Arena *arena)
 {
 	if (arena->freed)
 		return cur_err = GENERIC_DOUBLE_FREE_ERR;
+#ifndef NDEBUG
 	ologf(LOG_DEBUG, "freeing arena(capacity=%zu)\n", arena->capacity);
+#endif
 	ARR_free(&arena->blocks_arr);
 	free(arena->ptr);
 	arena->freed = true;
@@ -42,7 +44,9 @@ inline err32_t ARENA_free(Arena *arena)
 
 Result(ArenaBlock_p) ARENA_get_block(Arena *arena_p, size_t size)
 {
+#ifndef NDEBUG
 	ologf(LOG_DEBUG, "requested size=%zu\n", size);
+#endif
 	if (arena_p == NULL)
 		return RES(NULL, cur_err = ARENA_P_PARAM_IS_NULL, ArenaBlock_p);
 	if (size == 0)
@@ -68,7 +72,7 @@ Result(ArenaBlock_p) ARENA_get_block(Arena *arena_p, size_t size)
 		if (iserr((temp_res = ARR_push_back(&arena_p->blocks_arr, &new_block)).err))
 			return RES(NULL, cur_err, ArenaBlock_p);
 
-#ifndef APLCORE__DISABLE_LOGGING
+#ifndef NDEBUG
 		ologf(LOG_DEBUG, "new block:\n    --> %s\n", ARENA_debug_block_str(temp_res.val, arena_p, true));
 		ologf(LOG_DEBUG, "block_arr(length=%zu, memb_size=%zu)\n",
 				arena_p->blocks_arr.length, arena_p->blocks_arr.memb_size);
@@ -99,9 +103,11 @@ Result(ArenaBlock_p) ARENA_get_block(Arena *arena_p, size_t size)
 			if (iserr((temp_res = ARR_push_back(&arena_p->blocks_arr, &new_block)).err))
 				return RES(NULL, cur_err, ArenaBlock_p);
 
+#ifndef NDEBUG
 			ologf(LOG_DEBUG, "new block:\n    --> %s\n", ARENA_debug_block_str(temp_res.val, arena_p, true));
 			ologf(LOG_DEBUG, "block_arr(length=%zu, memb_size=%zu)\n",
 					arena_p->blocks_arr.length, arena_p->blocks_arr.memb_size);
+#endif
 
 			temp_res = ARR_get_at(arena_p->blocks_arr, i);
 			if (iserr(temp_res.err))
@@ -112,7 +118,9 @@ Result(ArenaBlock_p) ARENA_get_block(Arena *arena_p, size_t size)
 
 			return RES(cur, cur_err = NIL, ArenaBlock_p);
 		}
+#ifndef NDEBUG
 		ologf(LOG_DEBUG, "found sizeable block:\n    --> %s\n", ARENA_debug_block_str(cur, arena_p, true));
+#endif
 
 		cur->poslen.len = size;
 		cur->in_use = true;
@@ -162,17 +170,21 @@ Result(ArenaBlock_p) ARENA_get_block(Arena *arena_p, size_t size)
 	if (total_size < size)
 		return RES(NULL, 3, ArenaBlock_p);
 
+#ifndef NDEBUG
 	ologf(LOG_DEBUG,
-			"could not find single sizeable block, merging sizes of blocks [%03zu, %03zu] "
+			"could not find any single block of sufficient size, merging sizes of blocks [%03zu, %03zu] "
 			"(sum size: %zu bytes)\n",
 			scbr.pos, scbr.pos + scbr.len - 1, total_size);
+#endif
 
 	ArenaBlock_p first_block_p = ARR_get_at(arena_p->blocks_arr, scbr.pos).val;
 	first_block_p->poslen.len = size;
 	first_block_p->in_use = true;
 
+#ifndef NDEBUG
 	ologf(LOG_DEBUG, "used first block of range for data: \n    --> %s\n",
 			ARENA_debug_block_str(first_block_p, arena_p, true));
+#endif
 
 	cur = ARR_get_at(arena_p->blocks_arr, scbr.pos+1).val;
 	cur->poslen.pos = first_block_p->poslen.pos + size;
@@ -206,8 +218,10 @@ err32_t ARENA_return_block(Arena *arena_p, size_t pos)
 	if (cur->poslen.pos != pos)
 		return -1;
 
+#ifndef NDEBUG
 	ologf(LOG_DEBUG, "returning a block of memory its owner:\n    --> %s\n",
 			ARENA_debug_block_str(cur, arena_p, true));
+#endif
 
 	cur->in_use = false;
 	

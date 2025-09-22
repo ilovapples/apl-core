@@ -4,9 +4,9 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-#include "types.h"
-#include "util/error.h"
-#include "polymorph.h"
+#include "aplcore/types.h"
+#include "aplcore/util/error.h"
+#include "aplcore/polymorph.h"
 
 typedef struct Arena Arena;
 

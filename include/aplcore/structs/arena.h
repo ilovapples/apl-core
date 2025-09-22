@@ -3,10 +3,10 @@
 
 #include <stdbool.h>
 
-#include "structs/array.h"
-#include "structs/string.h"
-#include "structs/slice.h"
-#include "util/error.h"
+#include "aplcore/structs/array.h"
+#include "aplcore/structs/string.h"
+#include "aplcore/structs/slice.h"
+#include "aplcore/util/error.h"
 
 typedef struct ArenaBlock {
 	pos_len poslen; // pos is byte offset from Arena::ptr, len is also in bytes

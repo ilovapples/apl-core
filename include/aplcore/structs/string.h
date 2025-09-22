@@ -5,8 +5,8 @@
 #include <string.h>
 #include <stddef.h>
 
-#include "types.h"
-#include "util/error.h"
+#include "aplcore/types.h"
+#include "aplcore/util/error.h"
 
 typedef struct Arena Arena;
 

@@ -5,8 +5,8 @@
 #include <stdio.h>
 #include <wchar.h>
 
-#include "types.h"
-#include "util/misc.h"
+#include "aplcore/types.h"
+#include "aplcore/util/misc.h"
 
 /* lots of macros here */
 #define __tostr(x) #x
@@ -53,10 +53,6 @@ void vflogf(LOG_TYPE type, FILE *stream, const char *fmt, va_list arg_list) __pr
 #endif
 
 
-/* Prints compile time info such as date and time of compilation and compiler 
- * version */
-void print_info(void);
-
 #ifdef APLCORE__INCLUDE_WIDE_FUNCS
 /* The variable-argument version  of `fwlogf`. See `fwlogf` for more details. */
 void vfwlogf(LOG_TYPE type, FILE *stream, const wchar_t *fmt, va_list arg_list);
@@ -68,10 +64,6 @@ void vfwlogf(LOG_TYPE type, FILE *stream, const wchar_t *fmt, va_list arg_list);
 	void ewerror(err32_t err_code, const wchar_t *fmt, ...);
 #endif
 
-
-/* Prints compile time info such as date and time of compilation and compiler 
- * version */
-void wprint_info(void);
 #endif
 
 
@@ -96,16 +88,47 @@ void wprint_info(void);
 	#endif
 
 #else
-	#define flogf(a,b,c,...)
-	#define ologf(a,b,...)
-	#define elogf(a,b,...)
+	#define flogf(a,...)
+	#define ologf(a,...)
+	#define elogf(a,...)
 
 	#ifdef APLCORE__INCLUDE_WIDE_FUNCS
-		#define fwlogf(a,b,c,...)
-		#define owlogf(a,b,...)
-		#define ewlogf(a,b,...)
+		#define fwlogf(a,...)
+		#define owlogf(a,...)
+		#define ewlogf(a,...)
 	#endif
 #endif
+
+#ifdef __GNUC__
+	#define APLCORE__UTIL__COMPILER_NAME "GCC"
+#elif defined(__clang__)
+	#define APLCORE__UTIL__COMPILER_NAME "Clang"
+#elif defined(__INTEL_COMPILER__)
+	#define APLCORE__UTIL__COMPILER_NAME "an Intel compiler of"
+#endif
+
+#define MKFN_print_info(append) \
+void print_info##append(void) \
+{ \
+	printf("Compiled on " __DATE__ "at " __TIME__ " with " \
+			APLCORE__UTIL__COMPILER_NAME \
+			" version " __VERSION__ " C standard version %ld.\n", \
+			__STDC_VERSION__); \
+}
+#define MKPRTP_print_info(append) \
+void print_info##append(void)
+
+#define MKFN_wprint_info(append) \
+void wprint_info##append(void) \
+{ \
+	wprintf(L"Compiled on " __DATE__ "at " __TIME__ " with " \
+			APLCORE__UTIL__COMPILER_NAME \
+			" version " __VERSION__ " C standard version %ld.\n", \
+			__STDC_VERSION__); \
+}
+#define MKPRTP_wprint_info(append) \
+void wprint_info##append(void)
+
 
 #endif /* APLCORE__UTIL__LOG_H */
 
